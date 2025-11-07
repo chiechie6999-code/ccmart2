@@ -4,20 +4,21 @@ require_once 'db_connect.php';
 require_once 'email_functions.php';
 
 // Helper function for name validation
-function validateName($name, $field_name) {
-    if (empty($name)) return ""; // Optional fields can be empty
+function validateName($name, $field_name, $is_optional = false) {
+    if (empty($name)) {
+        return $is_optional ? "" : "$field_name is required.";
+    }
 
-    if (strlen($name) < 2) return "$field_name must be at least 2 characters long.";
+    if (strlen($name) < 2 && !$is_optional) return "$field_name must be at least 2 characters.";
     if (strlen($name) > 50) return "$field_name cannot exceed 50 characters.";
-    if (preg_match('/\d/', $name)) return "$field_name cannot contain numbers.";
-    if (!preg_match('/^[a-zA-Z\s\'-]+$/', $name)) return "$field_name contains invalid characters.";
+    if (!preg_match('/^[a-zA-Z\s]+$/', $name)) return "$field_name should only contain letters and spaces.";
     if (preg_match('/\s{2,}/', $name)) return "$field_name should not contain multiple spaces.";
     if (strlen($name) > 1 && strtoupper($name) === $name) return "$field_name should not be all uppercase.";
-    if (preg_match('/([a-zA-Z])\\1{2,}/i', $name)) return "$field_name contains three or more repeated letters.";
+    if (preg_match('/([a-zA-Z])\\1{2,}/i', $name)) return "$field_name cannot contain three or more repeated letters.";
 
     $words = preg_split('/\s+/', $name);
     foreach ($words as $word) {
-        if (strlen($word) > 0 && !preg_match('/^[A-Z][a-z]*$/', $word)) {
+        if (strlen($word) > 0 && !preg_match('/^[A-Z][a-z]*$/', $word) && !preg_match('/^[A-Z]$/', $word)) {
             return "Each word in $field_name must start with an uppercase letter.";
         }
     }
@@ -79,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $first_name_error = validateName($input['first_name'], 'First Name');
     if ($first_name_error) $errors['first_name'] = $first_name_error;
 
-    $middle_name_error = validateName($input['middle_name'], 'Middle Name');
+    $middle_name_error = validateName($input['middle_name'], 'Middle Name', true);
     if ($middle_name_error) $errors['middle_name'] = $middle_name_error;
 
     $family_name_error = validateName($input['family_name'], 'Family Name');

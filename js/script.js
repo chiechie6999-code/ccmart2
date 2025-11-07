@@ -354,40 +354,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function validateName(name, fieldName = 'Name') {
-    if (!name) return { isValid: true }; // for optional fields
-
-    if (name.length < 2) {
-        return { isValid: false, message: `${fieldName} must be at least 2 characters long.` };
-    }
-    if (name.length > 50) {
-        return { isValid: false, message: `${fieldName} cannot exceed 50 characters.` };
-    }
-    if (/\d/.test(name)) {
-        return { isValid: false, message: `${fieldName} cannot contain numbers.` };
-    }
-    if (!/^[a-zA-Z\s'-]+$/.test(name)) {
-        return { isValid: false, message: `${fieldName} contains invalid characters.`};
-    }
-    if (/\s{2,}/.test(name)) {
-        return { isValid: false, message: `${fieldName} should not contain multiple spaces.` };
-    }
-    if (name.length > 1 && name === name.toUpperCase()) {
-        return { isValid: false, message: `${fieldName} should not be all uppercase.` };
-    }
-    if (/([a-zA-Z])\1{2,}/i.test(name)) {
-        return { isValid: false, message: `${fieldName} contains three or more repeated letters.` };
-    }
-    const words = name.split(/\s+/);
-    for (const word of words) {
-        if (word.length > 0 && !/^[A-Z][a-z]*$/.test(word)) {
-            return { isValid: false, message: `Each word in ${fieldName} must start with an uppercase letter.` };
-        }
-    }
-
-    return { isValid: true };
-}
-
 function validateAge(age) {
     const birthdateError = document.getElementById('birthdate_error');
     if (isNaN(age) || age < 18) {
@@ -401,54 +367,46 @@ function validateAge(age) {
 
 // Helper function to validate name fields with custom fieldName
 function validateNameField(value, fieldName) {
+    // Optional fields are valid if empty
     if (!value) {
-        return { isValid: false, message: `${fieldName} is required.` };
+        return (fieldName === 'Middle Name') ? { isValid: true } : { isValid: false, message: `${fieldName} is required.` };
     }
 
-    // Trim and check length
     const trimmed = value.trim();
-    if (trimmed.length < 2) {
+
+    // Rule: Length validation
+    if (trimmed.length < 2 && fieldName !== 'Middle Name') {
         return { isValid: false, message: `${fieldName} must be at least 2 characters.` };
     }
-
-    if (trimmed.length > 30) {
-        return { isValid: false, message: `${fieldName} cannot exceed 30 characters.` };
+    if (trimmed.length > 50) {
+        return { isValid: false, message: `${fieldName} cannot exceed 50 characters.` };
     }
 
-    // Check for numbers
-    if (/\d/.test(trimmed)) {
-        return { isValid: false, message: `${fieldName} cannot contain numbers.` };
+    // Rule: No special characters or numbers (only letters and single spaces)
+    if (!/^[a-zA-Z\s]+$/.test(trimmed)) {
+        return { isValid: false, message: `${fieldName} should only contain letters and spaces.` };
     }
 
-    // Check for invalid characters (allow letters, spaces, and hyphens)
-    if (!/^[a-zA-Z\s-]+$/.test(trimmed)) {
-        return { isValid: false, message: `${fieldName} can only contain letters, spaces, and hyphens.` };
+    // Rule: No double spaces
+    if (/\s{2,}/.test(trimmed)) {
+        return { isValid: false, message: `${fieldName} should not contain multiple spaces.` };
     }
 
-    // Check for double spaces or invalid hyphen usage
-    if (/\s{2,}|-{2,}|^-|-$|\s-|-\s/.test(trimmed)) {
-        return {
-            isValid: false,
-            message: `${fieldName} has invalid spacing or hyphen usage.`
-        };
+    // Rule: Not all capital letters (if longer than a single character)
+    if (trimmed.length > 1 && trimmed === trimmed.toUpperCase()) {
+        return { isValid: false, message: `${fieldName} should not be all uppercase.` };
     }
 
-    // Check for three or more repeated letters in a row
-    if (/([a-zA-Z])\1{2,}/.test(trimmed)) {
-        return {
-            isValid: false,
-            message: `${fieldName} cannot contain three or more repeated letters in a row.`
-        };
+    // Rule: No three or more consecutive same letters (case-insensitive)
+    if (/([a-zA-Z])\1{2,}/i.test(trimmed)) {
+        return { isValid: false, message: `${fieldName} cannot contain three or more repeated letters.` };
     }
 
-    // Check for proper capitalization (Firstname Lastname or Lastname-Othername)
-    const words = trimmed.split(/[\s-]+/);
+    // Rule: First letter of each word must be uppercase, rest lowercase
+    const words = trimmed.split(/\s+/);
     for (const word of words) {
-        if (!/^[A-Z][a-z]*$/.test(word)) {
-            return {
-                isValid: false,
-                message: `Each part of ${fieldName} must start with an uppercase letter followed by lowercase letters.`
-            };
+        if (word.length > 0 && !/^[A-Z][a-z]*$/.test(word) && !/^[A-Z]$/.test(word)) {
+            return { isValid: false, message: `Each word in ${fieldName} must start with an uppercase letter.` };
         }
     }
 

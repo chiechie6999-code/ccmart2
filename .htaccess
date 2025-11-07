@@ -1,0 +1,6 @@
+# Prevent directory listing
+Options -Indexes
+
+# Block direct access to php and js directories
+RewriteEngine On
+RewriteRule ^(php|js)/ - [F,L]
